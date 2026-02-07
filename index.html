@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lotería Mexicana - Cast Receiver</title>
+  <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      width: 100vw;
+      color: white;
+      overflow: hidden;
+    }
+    
+    .container {
+      text-align: center;
+      width: 90%;
+      max-width: 1200px;
+      padding: 40px;
+    }
+    
+    .header {
+      margin-bottom: 40px;
+      animation: fadeIn 1s ease;
+    }
+    
+    .title {
+      font-size: clamp(3rem, 8vw, 5rem);
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 3px 3px 15px rgba(0,0,0,0.4);
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+    
+    .subtitle {
+      font-size: clamp(4rem, 10vw, 6rem);
+      margin-bottom: 20px;
+      filter: drop-shadow(2px 2px 8px rgba(0,0,0,0.3));
+    }
+    
+    .status {
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      color: rgba(255,255,255,0.9);
+      font-weight: 500;
+      padding: 15px 30px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50px;
+      backdrop-filter: blur(10px);
+      display: inline-block;
+      margin-bottom: 30px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .status.connected {
+      background: rgba(74, 222, 128, 0.25);
+      color: #4ade80;
+      animation: none;
+    }
+    
+    .card-container {
+      background: white;
+      border-radius: 40px;
+      padding: 60px;
+      box-shadow: 0 30px 100px rgba(0,0,0,0.4);
+      min-height: 65vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .card-container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(230, 57, 70, 0.05), transparent);
+      animation: shine 3s infinite;
+    }
+    
+    .card-image {
+      max-width: 600px;
+      max-height: 800px;
+      width: 100%;
+      height: auto;
+      border-radius: 25px;
+      box-shadow: 0 15px 50px rgba(0,0,0,0.25);
+      margin-bottom: 40px;
+      animation: cardEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      z-index: 1;
+    }
+    
+    .card-info {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .card-number {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 900;
+      color: #E63946;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .card-name {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: bold;
+      color: #E63946;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      animation: slideUp 0.5s ease 0.2s both;
+    }
+    
+    .card-description {
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      color: #666;
+      font-style: italic;
+      animation: slideUp 0.5s ease 0.4s both;
+    }
+    
+    .waiting {
+      color: rgba(230, 57, 70, 0.3);
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 600;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes cardEnter {
+      from {
+        opacity: 0;
+        transform: scale(0.8) rotateY(-15deg);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) rotateY(0deg);
+      }
+    }
+    
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.6;
+        transform: scale(0.98);
+      }
+    }
+    
+    @keyframes shine {
+      0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+      }
+      100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .card-container {
+        padding: 40px 30px;
+        min-height: 60vh;
+      }
+      
+      .card-image {
+        max-width: 400px;
+        max-height: 600px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="title">Lotería Mexicana</h1>
+      <div class="subtitle">🇲🇽</div>
+      <div class="status" id="status">Esperando conexión...</div>
+    </div>
+    
+    <div class="card-container" id="cardContainer">
+      <div class="waiting" id="waiting">
+        En espera de la primera carta...
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const context = cast.framework.CastReceiverContext.getInstance();
+    const playerManager = context.getPlayerManager();
+    
+    const statusEl = document.getElementById('status');
+    const cardContainer = document.getElementById('cardContainer');
+    const waitingEl = document.getElementById('waiting');
+    
+    // Namespace para mensajes personalizados
+    const CUSTOM_CHANNEL = 'urn:x-cast:com.loteria-mexicana';
+    
+    // Listener para mensajes personalizados
+    context.addCustomMessageListener(CUSTOM_CHANNEL, (customEvent) => {
+      console.log('📡 Mensaje recibido:', customEvent.data);
+      
+      const data = customEvent.data;
+      
+      if (data.type === 'CARD_CHANGE') {
+        displayCard(data.card);
+      } else if (data.type === 'GAME_STATE') {
+        updateGameState(data.state);
+      }
+    });
+    
+    // Listener para eventos del sistema
+    context.addEventListener(
+      cast.framework.system.EventType.SENDER_CONNECTED,
+      (event) => {
+        console.log('✅ Sender conectado:', event.senderId);
+        statusEl.textContent = '✓ Conectado';
+        statusEl.classList.add('connected');
+      }
+    );
+    
+    context.addEventListener(
+      cast.framework.system.EventType.SENDER_DISCONNECTED,
+      (event) => {
+        console.log('❌ Sender desconectado:', event.senderId);
+        statusEl.textContent = 'Desconectado';
+        statusEl.classList.remove('connected');
+      }
+    );
+    
+    // Función para mostrar carta
+    function displayCard(card) {
+      console.log('🃏 Mostrando carta:', card);
+      
+      // Ocultar mensaje de espera
+      if (waitingEl) {
+        waitingEl.style.display = 'none';
+      }
+      
+      // Limpiar contenedor con animación
+      cardContainer.style.opacity = '0';
+      setTimeout(() => {
+        cardContainer.innerHTML = '';
+        
+        // Crear elementos
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'card-info';
+        
+        // Número de carta
+        if (card.id) {
+          const numberEl = document.createElement('div');
+          numberEl.className = 'card-number';
+          numberEl.textContent = `#${card.id}`;
+          infoDiv.appendChild(numberEl);
+        }
+        
+        // Imagen
+        if (card.imageUrl) {
+          const img = document.createElement('img');
+          img.src = card.imageUrl;
+          img.className = 'card-image';
+          img.alt = card.name;
+          img.onerror = () => {
+            console.error('❌ Error cargando imagen:', card.imageUrl);
+            img.style.display = 'none';
+          };
+          cardContainer.appendChild(img);
+        }
+        
+        // Nombre
+        const nameEl = document.createElement('div');
+        nameEl.className = 'card-name';
+        nameEl.textContent = card.name || 'Sin nombre';
+        infoDiv.appendChild(nameEl);
+        
+        // Descripción
+        if (card.description) {
+          const descEl = document.createElement('div');
+          descEl.className = 'card-description';
+          descEl.textContent = card.description;
+          infoDiv.appendChild(descEl);
+        }
+        
+        cardContainer.appendChild(infoDiv);
+        
+        // Fade in
+        setTimeout(() => {
+          cardContainer.style.opacity = '1';
+        }, 50);
+      }, 300);
+    }
+    
+    // Función para actualizar estado del juego
+    function updateGameState(state) {
+      console.log('🎮 Estado del juego:', state);
+      // Aquí puedes agregar lógica adicional si es necesario
+    }
+    
+    // Opciones del receiver
+    const playbackConfig = new cast.framework.PlaybackConfig();
+    
+    // Configuración de opciones
+    const options = new cast.framework.CastReceiverOptions();
+    options.disableIdleTimeout = true;
+    options.customNamespaces = {};
+    options.customNamespaces[CUSTOM_CHANNEL] = cast.framework.system.MessageType.JSON;
+    
+    // Iniciar aplicación
+    context.start(options);
+    
+    console.log('🚀 Cast Receiver iniciado');
+    console.log('📺 Esperando conexión desde la app móvil...');
+  </script>
+</body>
+</html>
