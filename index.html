@@ -95,8 +95,8 @@
     .history-panel {
       display: flex;
       flex-direction: column;
-      gap: 15px;
-      width: 200px;
+      gap: 10px;
+      width: 120px;
       opacity: 0.7;
     }
     
@@ -108,6 +108,12 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
       transition: transform 0.2s ease, opacity 0.2s ease;
       opacity: 0.5;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .history-item.empty {
+      opacity: 0.1;
+      box-shadow: none;
     }
     
     .history-item:first-child {
@@ -287,23 +293,33 @@
       setTimeout(() => {
         cardContainer.innerHTML = '';
         
-        // Panel izquierdo - Historial
+        // Panel izquierdo - Historial (5 contenedores fijos)
         const historyPanel = document.createElement('div');
         historyPanel.className = 'history-panel';
         
-        cardHistory.forEach((historyCard, index) => {
-          if (index < 5) {
-            const historyItem = document.createElement('div');
-            historyItem.className = 'history-item';
-            
+        // Crear siempre 5 contenedores
+        for (let i = 0; i < 5; i++) {
+          const historyItem = document.createElement('div');
+          historyItem.className = 'history-item';
+          
+          // Si hay una carta en esta posición del historial
+          if (cardHistory[i]) {
             const historyImg = document.createElement('img');
-            historyImg.src = historyCard.imageUrl;
-            historyImg.alt = historyCard.name;
-            
+            historyImg.src = cardHistory[i].imageUrl;
+            historyImg.alt = cardHistory[i].name;
             historyItem.appendChild(historyImg);
-            historyPanel.appendChild(historyItem);
+            
+            // La primera (más reciente) con opacidad completa
+            if (i === 0) {
+              historyItem.style.opacity = '1';
+            }
+          } else {
+            // Contenedor vacío
+            historyItem.classList.add('empty');
           }
-        });
+          
+          historyPanel.appendChild(historyItem);
+        }
         
         // Panel central - Imagen principal
         const cardMain = document.createElement('div');
