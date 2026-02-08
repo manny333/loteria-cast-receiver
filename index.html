@@ -250,6 +250,24 @@
       }
     });
     
+    // Listener para cuando se carga media (usado por loadMedia)
+    playerManager.addEventListener(
+      cast.framework.events.EventType.MEDIA_STATUS,
+      (event) => {
+        console.log('📺 Media Status:', event);
+        const mediaInformation = event.mediaStatus?.media;
+        if (mediaInformation && mediaInformation.metadata) {
+          const card = {
+            imageUrl: mediaInformation.contentUrl,
+            name: mediaInformation.metadata.title || 'Sin nombre',
+            description: mediaInformation.metadata.subtitle || '',
+            id: null
+          };
+          displayCard(card);
+        }
+      }
+    );
+    
     // Listener para eventos del sistema
     context.addEventListener(
       cast.framework.system.EventType.SENDER_CONNECTED,
