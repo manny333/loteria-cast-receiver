@@ -82,26 +82,68 @@
     
     .card-container {
       display: flex;
-      flex-direction: column;
-      justify-content: center;
+      flex-direction: row;
+      justify-content: space-between;
       align-items: center;
+      width: 100%;
+      height: 100%;
+      padding: 40px;
+      gap: 40px;
       transition: opacity 0.3s ease;
     }
     
+    .history-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 200px;
+      opacity: 0.7;
+    }
+    
+    .history-item {
+      width: 100%;
+      aspect-ratio: 2/3;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      opacity: 0.5;
+    }
+    
+    .history-item:first-child {
+      opacity: 1;
+    }
+    
+    .history-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .card-main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
     .card-image {
-      max-width: 85vw;
-      max-height: 80vh;
+      max-width: 100%;
+      max-height: 85vh;
       width: auto;
       height: auto;
       object-fit: contain;
       border-radius: 8px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      margin-top: 40px;
-      margin-bottom: 40px;
     }
     
     .card-info {
-      text-align: center;
+      width: 300px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
     }
     
     .card-number {
@@ -162,6 +204,9 @@
     // Namespace para mensajes personalizados
     const CUSTOM_CHANNEL = 'urn:x-cast:com.loteria-mexicana';
     
+    // Historial de cartas (últimas 5)
+    let cardHistory = [];
+    
     // Listener para mensajes personalizados
     context.addCustomMessageListener(CUSTOM_CHANNEL, (customEvent) => {
       console.log('📡 Mensaje recibido:', customEvent.data);
@@ -212,9 +257,22 @@
       }
     );
     
+    // Función para actualizar historial
+    function updateHistory(card) {
+      // Agregar carta al inicio del historial
+      cardHistory.unshift(card);
+      // Mantener solo las últimas 5
+      if (cardHistory.length > 5) {
+        cardHistory.pop();
+      }
+    }
+    
     // Función para mostrar carta
     function displayCard(card) {
       console.log('🃏 Mostrando carta:', card);
+      
+      // Actualizar historial
+      updateHistory(card);
       
       // Ocultar mensaje de espera y header
       if (waitingEl) {
@@ -229,19 +287,28 @@
       setTimeout(() => {
         cardContainer.innerHTML = '';
         
-        // Crear elementos
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'card-info';
+        // Panel izquierdo - Historial
+        const historyPanel = document.createElement('div');
+        historyPanel.className = 'history-panel';
         
-        // Número de carta
-        if (card.id) {
-          const numberEl = document.createElement('div');
-          numberEl.className = 'card-number';
-          numberEl.textContent = `#${card.id}`;
-          infoDiv.appendChild(numberEl);
-        }
+        cardHistory.forEach((historyCard, index) => {
+          if (index < 5) {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            
+            const historyImg = document.createElement('img');
+            historyImg.src = historyCard.imageUrl;
+            historyImg.alt = historyCard.name;
+            
+            historyItem.appendChild(historyImg);
+            historyPanel.appendChild(historyItem);
+          }
+        });
         
-        // Imagen
+        // Panel central - Imagen principal
+        const cardMain = document.createElement('div');
+        cardMain.className = 'card-main';
+        
         if (card.imageUrl) {
           const img = document.createElement('img');
           img.src = card.imageUrl;
@@ -251,7 +318,19 @@
             console.error('❌ Error cargando imagen:', card.imageUrl);
             img.style.display = 'none';
           };
-          cardContainer.appendChild(img);
+          cardMain.appendChild(img);
+        }
+        
+        // Panel derecho - Info
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'card-info';
+        
+        // Número de carta
+        if (card.id) {
+          const numberEl = document.createElement('div');
+          numberEl.className = 'card-number';
+          numberEl.textContent = `#${card.id}`;
+          infoDiv.appendChild(numberEl);
         }
         
         // Nombre
@@ -268,6 +347,9 @@
           infoDiv.appendChild(descEl);
         }
         
+        // Agregar todos los paneles
+        cardContainer.appendChild(historyPanel);
+        cardContainer.appendChild(cardMain);
         cardContainer.appendChild(infoDiv);
         
         // Fade in
