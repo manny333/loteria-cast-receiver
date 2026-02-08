@@ -41,6 +41,13 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 10;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+    
+    .header.hidden {
+      opacity: 0;
+      pointer-events: none;
     }
     
     .title {
@@ -89,7 +96,8 @@
       object-fit: contain;
       border-radius: 8px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      margin-bottom: 25px;
+      margin-top: 40px;
+      margin-bottom: 40px;
     }
     
     .card-info {
@@ -149,6 +157,7 @@
     const statusEl = document.getElementById('status');
     const cardContainer = document.getElementById('cardContainer');
     const waitingEl = document.getElementById('waiting');
+    const headerEl = document.querySelector('.header');
     
     // Namespace para mensajes personalizados
     const CUSTOM_CHANNEL = 'urn:x-cast:com.loteria-mexicana';
@@ -207,9 +216,12 @@
     function displayCard(card) {
       console.log('🃏 Mostrando carta:', card);
       
-      // Ocultar mensaje de espera
+      // Ocultar mensaje de espera y header
       if (waitingEl) {
         waitingEl.style.display = 'none';
+      }
+      if (headerEl) {
+        headerEl.classList.add('hidden');
       }
       
       // Limpiar contenedor con animación
