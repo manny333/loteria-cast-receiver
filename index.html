@@ -267,8 +267,8 @@
     function updateHistory(card) {
       // Agregar carta al inicio del historial
       cardHistory.unshift(card);
-      // Mantener solo las últimas 5
-      if (cardHistory.length > 5) {
+      // Mantener solo las últimas 3
+      if (cardHistory.length > 3) {
         cardHistory.pop();
       }
     }
@@ -293,12 +293,12 @@
       setTimeout(() => {
         cardContainer.innerHTML = '';
         
-        // Panel izquierdo - Historial (5 contenedores fijos)
+        // Panel izquierdo - Historial (3 contenedores fijos)
         const historyPanel = document.createElement('div');
         historyPanel.className = 'history-panel';
         
-        // Crear siempre 5 contenedores
-        for (let i = 0; i < 5; i++) {
+        // Crear siempre 3 contenedores
+        for (let i = 0; i < 3; i++) {
           const historyItem = document.createElement('div');
           historyItem.className = 'history-item';
           
