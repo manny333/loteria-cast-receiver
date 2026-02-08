@@ -89,6 +89,9 @@
       height: 100%;
       padding: 40px;
       gap: 40px;
+    }
+    
+    .card-main, .card-info {
       transition: opacity 0.3s ease;
     }
     
@@ -212,8 +215,12 @@
     const CUSTOM_CHANNEL = 'urn:x-cast:com.loteria-mexicana';
     
     // Historial de cartas (últimas 5)
-    let cardHistory = [];
-    
+    let cardHistory = [];    
+    // Referencias a los paneles (se crean una vez)
+    let historyPanel = null;
+    let cardMain = null;
+    let infoDiv = null;
+    let isFirstCard = true;    
     // Listener para mensajes personalizados
     context.addCustomMessageListener(CUSTOM_CHANNEL, (customEvent) => {
       console.log('📡 Mensaje recibido:', customEvent.data);
@@ -274,6 +281,55 @@
       }
     }
     
+    // Función para actualizar historial visual
+    function updateHistoryVisual() {
+      if (!historyPanel) return;
+      
+      const historyItems = historyPanel.querySelectorAll('.history-item');
+      historyItems.forEach((item, i) => {
+        item.innerHTML = '';
+        item.classList.remove('empty');
+        
+        if (cardHistory[i]) {
+          const historyImg = document.createElement('img');
+          historyImg.src = cardHistory[i].imageUrl;
+          historyImg.alt = cardHistory[i].name;
+          item.appendChild(historyImg);
+          item.style.opacity = i === 0 ? '1' : '0.5';
+        } else {
+          item.classList.add('empty');
+        }
+      });
+    }
+    
+    // Función para crear estructura inicial
+    function createInitialStructure() {
+      cardContainer.innerHTML = '';
+      
+      // Panel izquierdo - Historial (3 contenedores fijos)
+      historyPanel = document.createElement('div');
+      historyPanel.className = 'history-panel';
+      
+      for (let i = 0; i < 3; i++) {
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item empty';
+        historyPanel.appendChild(historyItem);
+      }
+      
+      // Panel central - Imagen principal
+      cardMain = document.createElement('div');
+      cardMain.className = 'card-main';
+      
+      // Panel derecho - Info
+      infoDiv = document.createElement('div');
+      infoDiv.className = 'card-info';
+      
+      // Agregar todos los paneles
+      cardContainer.appendChild(historyPanel);
+      cardContainer.appendChild(cardMain);
+      cardContainer.appendChild(infoDiv);
+    }
+    
     // Función para mostrar carta
     function displayCard(card) {
       console.log('🃏 Mostrando carta:', card);
@@ -289,43 +345,22 @@
         headerEl.classList.add('hidden');
       }
       
-      // Limpiar contenedor con animación
-      cardContainer.style.opacity = '0';
+      // Crear estructura en la primera carta
+      if (isFirstCard) {
+        createInitialStructure();
+        isFirstCard = false;
+      }
+      
+      // Actualizar historial visual (sin animación)
+      updateHistoryVisual();
+      
+      // Animar solo cardMain e infoDiv
+      cardMain.style.opacity = '0';
+      infoDiv.style.opacity = '0';
+      
       setTimeout(() => {
-        cardContainer.innerHTML = '';
-        
-        // Panel izquierdo - Historial (3 contenedores fijos)
-        const historyPanel = document.createElement('div');
-        historyPanel.className = 'history-panel';
-        
-        // Crear siempre 3 contenedores
-        for (let i = 0; i < 3; i++) {
-          const historyItem = document.createElement('div');
-          historyItem.className = 'history-item';
-          
-          // Si hay una carta en esta posición del historial
-          if (cardHistory[i]) {
-            const historyImg = document.createElement('img');
-            historyImg.src = cardHistory[i].imageUrl;
-            historyImg.alt = cardHistory[i].name;
-            historyItem.appendChild(historyImg);
-            
-            // La primera (más reciente) con opacidad completa
-            if (i === 0) {
-              historyItem.style.opacity = '1';
-            }
-          } else {
-            // Contenedor vacío
-            historyItem.classList.add('empty');
-          }
-          
-          historyPanel.appendChild(historyItem);
-        }
-        
-        // Panel central - Imagen principal
-        const cardMain = document.createElement('div');
-        cardMain.className = 'card-main';
-        
+        // Actualizar imagen principal
+        cardMain.innerHTML = '';
         if (card.imageUrl) {
           const img = document.createElement('img');
           img.src = card.imageUrl;
@@ -338,11 +373,9 @@
           cardMain.appendChild(img);
         }
         
-        // Panel derecho - Info
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'card-info';
+        // Actualizar info
+        infoDiv.innerHTML = '';
         
-        // Número de carta
         if (card.id) {
           const numberEl = document.createElement('div');
           numberEl.className = 'card-number';
@@ -350,13 +383,11 @@
           infoDiv.appendChild(numberEl);
         }
         
-        // Nombre
         const nameEl = document.createElement('div');
         nameEl.className = 'card-name';
         nameEl.textContent = card.name || 'Sin nombre';
         infoDiv.appendChild(nameEl);
         
-        // Descripción
         if (card.description) {
           const descEl = document.createElement('div');
           descEl.className = 'card-description';
@@ -364,14 +395,10 @@
           infoDiv.appendChild(descEl);
         }
         
-        // Agregar todos los paneles
-        cardContainer.appendChild(historyPanel);
-        cardContainer.appendChild(cardMain);
-        cardContainer.appendChild(infoDiv);
-        
         // Fade in
         setTimeout(() => {
-          cardContainer.style.opacity = '1';
+          cardMain.style.opacity = '1';
+          infoDiv.style.opacity = '1';
         }, 50);
       }, 300);
     }
