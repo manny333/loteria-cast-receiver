@@ -185,6 +185,51 @@
       font-weight: 300;
       letter-spacing: 2px;
     }
+    
+    /* Animaciones para historial */
+    @keyframes slideInFromTop {
+      0% {
+        transform: translateY(-120%) scale(0.8);
+        opacity: 0;
+        filter: brightness(2);
+      }
+      60% {
+        filter: brightness(1.5);
+      }
+      100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+        filter: brightness(1);
+      }
+    }
+    
+    @keyframes slideDown {
+      0% {
+        transform: translateY(0);
+      }
+      100% {
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      }
+      50% {
+        box-shadow: 0 4px 20px rgba(255, 255, 255, 0.3),
+                    0 0 30px rgba(255, 255, 255, 0.2);
+      }
+    }
+    
+    .history-item.new-item {
+      animation: slideInFromTop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+                 pulse 0.8s ease-out;
+    }
+    
+    .history-item.slide-down {
+      animation: slideDown 0.4s ease-out;
+    }
   </style>
 </head>
 <body>
@@ -286,20 +331,44 @@
       if (!historyPanel) return;
       
       const historyItems = historyPanel.querySelectorAll('.history-item');
-      historyItems.forEach((item, i) => {
-        item.innerHTML = '';
-        item.classList.remove('empty');
-        
-        if (cardHistory[i]) {
-          const historyImg = document.createElement('img');
-          historyImg.src = cardHistory[i].imageUrl;
-          historyImg.alt = cardHistory[i].name;
-          item.appendChild(historyImg);
-          item.style.opacity = i === 0 ? '1' : '0.5';
-        } else {
-          item.classList.add('empty');
-        }
+      
+      // Remover clases de animación previas
+      historyItems.forEach(item => {
+        item.classList.remove('new-item', 'slide-down');
       });
+      
+      // Pequeño delay para que el navegador registre la remoción de clases
+      setTimeout(() => {
+        historyItems.forEach((item, i) => {
+          item.innerHTML = '';
+          item.classList.remove('empty');
+          
+          if (cardHistory[i]) {
+            const historyImg = document.createElement('img');
+            historyImg.src = cardHistory[i].imageUrl;
+            historyImg.alt = cardHistory[i].name;
+            item.appendChild(historyImg);
+            
+            // Aplicar opacidad
+            if (i === 0) {
+              item.style.opacity = '1';
+              item.classList.add('new-item'); // Animación para la nueva
+            } else {
+              item.style.opacity = '0.5';
+              item.classList.add('slide-down'); // Animación suave para las que bajan
+            }
+          } else {
+            item.classList.add('empty');
+          }
+        });
+        
+        // Limpiar clases de animación después de que terminen
+        setTimeout(() => {
+          historyItems.forEach(item => {
+            item.classList.remove('new-item', 'slide-down');
+          });
+        }, 800);
+      }, 10);
     }
     
     // Función para crear estructura inicial
