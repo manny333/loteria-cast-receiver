@@ -335,6 +335,8 @@
   <audio id="audioPlayer" preload="auto"></audio>
   
   <script>
+    console.log('🎬 Iniciando script del receiver...');
+    
     const context = cast.framework.CastReceiverContext.getInstance();
     const playerManager = context.getPlayerManager();
     
@@ -345,6 +347,8 @@
     const countdownOverlay = document.getElementById('countdownOverlay');
     const countdownContent = document.getElementById('countdownContent');
     const audioPlayer = document.getElementById('audioPlayer');
+    
+    console.log('✅ Elementos HTML obtenidos');
     
     // Namespace para mensajes personalizados
     const CUSTOM_CHANNEL = 'urn:x-cast:com.loteria-mexicana';
@@ -359,6 +363,9 @@
     
     // Variable para el audio actual
     let currentAudio = null;    
+    
+    console.log('📡 Configurando listeners...');
+    
     // Listener para cuando se carga media (PRINCIPAL - lee customData)
     playerManager.addEventListener(
       cast.framework.events.EventType.LOAD,
@@ -655,6 +662,8 @@
       // Aquí puedes agregar lógica adicional si es necesario
     }
     
+    console.log('⚙️ Configurando opciones del receiver...');
+    
     // Opciones del receiver
     const playbackConfig = new cast.framework.PlaybackConfig();
     
@@ -664,11 +673,16 @@
     options.customNamespaces = {};
     options.customNamespaces[CUSTOM_CHANNEL] = cast.framework.system.MessageType.JSON;
     
-    // Iniciar aplicación
-    context.start(options);
+    console.log('🚀 Iniciando aplicación Cast Receiver...');
     
-    console.log('🚀 Cast Receiver iniciado');
-    console.log('📺 Esperando conexión desde la app móvil...');
+    // Iniciar aplicación
+    try {
+      context.start(options);
+      console.log('✅ Cast Receiver iniciado exitosamente');
+      console.log('📺 Esperando conexión desde la app móvil...');
+    } catch (error) {
+      console.error('❌ Error al iniciar Cast Receiver:', error);
+    }
   </script>
 </body>
 </html>
