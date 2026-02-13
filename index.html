@@ -393,12 +393,16 @@
               }, 100);
               return null; // No cargar la imagen
             } else if (customData && customData.type === 'CARD_WITH_AUDIO') {
-              // Mostrar carta sin cargar media (evita flashazo)
+              // Mostrar carta y actualizar metadata
               console.log('🃏 Carta recibida:', customData.card.name);
               setTimeout(() => {
                 displayCard(customData.card);
               }, 100);
-              return null; // No cargar la imagen, solo mostrar la carta
+              // Modificar loadRequestData para evitar reload visual
+              loadRequestData.autoplay = false;
+              loadRequestData.currentTime = 0;
+              // Devolver loadRequestData para que el expanded controller muestre la info
+              return loadRequestData;
             }
           }
         } catch (error) {
