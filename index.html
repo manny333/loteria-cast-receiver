@@ -393,10 +393,12 @@
               }, 100);
               return null; // No cargar la imagen
             } else if (customData && customData.type === 'CARD_WITH_AUDIO') {
-              // Programar displayCard para después de que se cargue la media
+              // Mostrar carta sin cargar media (evita flashazo)
+              console.log('🃏 Carta recibida:', customData.card.name);
               setTimeout(() => {
                 displayCard(customData.card);
-              }, 500);
+              }, 100);
+              return null; // No cargar la imagen, solo mostrar la carta
             }
           }
         } catch (error) {
