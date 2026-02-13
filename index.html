@@ -200,6 +200,71 @@
       text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
     }
     
+    /* Countdown minimalista */
+    .countdown-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(15px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .countdown-overlay.visible {
+      opacity: 1;
+    }
+    
+    .countdown-number {
+      font-size: clamp(8rem, 20vw, 15rem);
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 10px 40px rgba(0, 0, 0, 0.9),
+                   0 0 80px rgba(255, 255, 255, 0.3);
+      animation: countdownPulse 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    .countdown-message {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 400;
+      color: #ffffff;
+      text-align: center;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
+      animation: messageSlideIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+      padding: 0 40px;
+    }
+    
+    @keyframes countdownPulse {
+      0% {
+        transform: scale(0.3);
+        opacity: 0;
+      }
+      60% {
+        transform: scale(1.1);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes messageSlideIn {
+      0% {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
     /* Animaciones para historial */
     @keyframes slideInFromTop {
       0% {
@@ -259,7 +324,15 @@
         En espera de la primera carta...
       </div>
     </div>
+    
+    <!-- Countdown overlay -->
+    <div class="countdown-overlay" id="countdownOverlay">
+      <div id="countdownContent"></div>
+    </div>
   </div>
+  
+  <!-- Audio element para reproducir sonidos -->
+  <audio id="audioPlayer" preload="auto"></audio>
   
   <script>
     const context = cast.framework.CastReceiverContext.getInstance();
@@ -269,6 +342,9 @@
     const cardContainer = document.getElementById('cardContainer');
     const waitingEl = document.getElementById('waiting');
     const headerEl = document.querySelector('.header');
+    const countdownOverlay = document.getElementById('countdownOverlay');
+    const countdownContent = document.getElementById('countdownContent');
+    const audioPlayer = document.getElementById('audioPlayer');
     
     // Namespace para mensajes personalizados
     const CUSTOM_CHANNEL = 'urn:x-cast:com.loteria-mexicana';
@@ -279,34 +355,39 @@
     let historyPanel = null;
     let cardMain = null;
     let infoDiv = null;
-    let isFirstCard = true;    
-    // Listener para mensajes personalizados
+    let isFirstCard = true;
+    
+    // Variable para el audio actual
+    let currentAudio = null;    
+    // Listener para mensajes personalizados (simplificado - no usado actualmente)
     context.addCustomMessageListener(CUSTOM_CHANNEL, (customEvent) => {
       console.log('📡 Mensaje recibido:', customEvent.data);
-      
-      const data = customEvent.data;
-      
-      if (data.type === 'CARD_CHANGE') {
-        displayCard(data.card);
-      } else if (data.type === 'GAME_STATE') {
-        updateGameState(data.state);
-      }
     });
     
-    // Listener para cuando se carga media (usado por loadMedia)
+    // Listener para cuando se carga media (PRINCIPAL - lee customData)
     playerManager.addEventListener(
-      cast.framework.events.EventType.MEDIA_STATUS,
+      cast.framework.events.EventType.LOAD,
       (event) => {
-        console.log('📺 Media Status:', event);
-        const mediaInformation = event.mediaStatus?.media;
-        if (mediaInformation && mediaInformation.metadata) {
-          const card = {
-            imageUrl: mediaInformation.contentUrl,
-            name: mediaInformation.metadata.title || 'Sin nombre',
-            description: mediaInformation.metadata.subtitle || '',
-            id: null
-          };
-          displayCard(card);
+        console.log('📺 LOAD Event:', event);
+        const loadRequestData = event.loadRequestData;
+        if (loadRequestData && loadRequestData.media) {
+          const media = loadRequestData.media;
+          const customData = media.customData;
+          
+          console.log('📦 Custom Data:', customData);
+          
+          if (customData && customData.type === 'CARD_WITH_AUDIO') {
+            displayCard(customData.card);
+          } else if (media.metadata) {
+            // Fallback si no hay customData
+            const card = {
+              imageUrl: media.contentUrl,
+              name: media.metadata.title || 'Sin nombre',
+              description: media.metadata.subtitle || '',
+              id: null
+            };
+            displayCard(card);
+          }
         }
       }
     );
@@ -329,6 +410,84 @@
         statusEl.classList.remove('connected');
       }
     );
+    
+    // Función para manejar reinicio
+    function handleRestart() {
+      console.log('🔄 Reiniciando receiver...');
+      
+      // Detener audio si está sonando
+      if (audioPlayer) {
+        audioPlayer.pause();
+        audioPlayer.src = '';
+      }
+      
+      // Limpiar historial
+      cardHistory = [];
+      
+      // Reset a estado inicial
+      isFirstCard = true;
+      
+      // Mostrar mensaje de espera
+      cardContainer.innerHTML = '';
+      waitingEl.style.display = 'block';
+      cardContainer.appendChild(waitingEl);
+      
+      // Mostrar header
+      if (headerEl) {
+        headerEl.classList.remove('hidden');
+      }
+      
+      // Ocultar countdown si está visible
+      if (countdownOverlay) {
+        countdownOverlay.classList.remove('visible');
+      }
+    }
+    
+    // Función para mostrar overlay de countdown
+    function showCountdownOverlay() {
+      console.log('⏱️ Mostrando countdown...');
+      countdownOverlay.classList.add('visible');
+      updateCountdown(3);
+    }
+    
+    // Función para actualizar número del countdown
+    function updateCountdown(count) {
+      countdownContent.innerHTML = `<div class="countdown-number">${count}</div>`;
+    }
+    
+    // Función para mostrar mensaje final del countdown
+    function showCountdownMessage() {
+      countdownContent.innerHTML = '<div class="countdown-message">¡Corre y se va con...!</div>';
+      
+      // Ocultar countdown después de 2 segundos
+      setTimeout(() => {
+        countdownOverlay.classList.remove('visible');
+      }, 2000);
+    }
+    
+    // Función para reproducir audio
+    function playAudio(audioUrl) {
+      if (!audioUrl || !audioPlayer) {
+        console.warn('⚠️ No hay URL de audio o audioPlayer no disponible');
+        return;
+      }
+      
+      try {
+        // Detener audio anterior si está sonando
+        audioPlayer.pause();
+        
+        // Cargar y reproducir nuevo audio
+        audioPlayer.src = audioUrl;
+        audioPlayer.load();
+        audioPlayer.play().catch((error) => {
+          console.error('❌ Error reproduciendo audio:', error);
+        });
+        
+        console.log('🔊 Reproduciendo audio:', audioUrl);
+      } catch (error) {
+        console.error('❌ Error configurando audio:', error);
+      }
+    }
     
     // Función para actualizar historial
     function updateHistory(card) {
@@ -419,6 +578,11 @@
       
       // Actualizar historial
       updateHistory(card);
+      
+      // Reproducir audio si está disponible
+      if (card.soundUrl) {
+        playAudio(card.soundUrl);
+      }
       
       // Ocultar mensaje de espera y header
       if (waitingEl) {
