@@ -385,6 +385,13 @@
                 handleRestart();
               }, 100);
               return null; // No cargar la imagen, solo reiniciar
+            } else if (customData && customData.type === 'COUNTDOWN') {
+              // Manejar countdown
+              console.log('⏱️ Countdown recibido:', customData.count);
+              setTimeout(() => {
+                handleCountdown(customData.count, customData.isStart, customData.audioUrl);
+              }, 100);
+              return null; // No cargar la imagen
             } else if (customData && customData.type === 'CARD_WITH_AUDIO') {
               // Programar displayCard para después de que se cargue la media
               setTimeout(() => {
@@ -450,26 +457,39 @@
       }
     }
     
-    // Función para mostrar overlay de countdown
-    function showCountdownOverlay() {
-      console.log('⏱️ Mostrando countdown...');
-      countdownOverlay.classList.add('visible');
-      updateCountdown(3);
-    }
-    
-    // Función para actualizar número del countdown
-    function updateCountdown(count) {
-      countdownContent.innerHTML = `<div class="countdown-number">${count}</div>`;
-    }
-    
-    // Función para mostrar mensaje final del countdown
-    function showCountdownMessage() {
-      countdownContent.innerHTML = '<div class="countdown-message">¡Corre y se va con...!</div>';
+    // Función para manejar countdown
+    function handleCountdown(count, isStart, audioUrl) {
+      console.log('⏱️ Manejando countdown:', count, 'isStart:', isStart, 'audio:', audioUrl);
       
-      // Ocultar countdown después de 2 segundos
-      setTimeout(() => {
-        countdownOverlay.classList.remove('visible');
-      }, 2000);
+      if (isStart || count > 0) {
+        // Ocultar header durante el countdown
+        if (headerEl) {
+          headerEl.classList.add('hidden');
+        }
+        
+        // Mostrar overlay si no está visible
+        if (!countdownOverlay.classList.contains('visible')) {
+          countdownOverlay.classList.add('visible');
+        }
+        
+        // Mostrar número
+        if (count > 0) {
+          countdownContent.innerHTML = `<div class="countdown-number">${count}</div>`;
+        }
+      } else if (count === 0) {
+        // Mostrar mensaje y reproducir audio
+        countdownContent.innerHTML = '<div class="countdown-message">¡Corre y se va con...!</div>';
+        
+        // Reproducir audio si está disponible
+        if (audioUrl) {
+          playAudio(audioUrl);
+        }
+        
+        // Ocultar countdown después de 3 segundos
+        setTimeout(() => {
+          countdownOverlay.classList.remove('visible');
+        }, 3000);
+      }
     }
     
     // Función para reproducir audio
