@@ -359,35 +359,34 @@
     
     // Variable para el audio actual
     let currentAudio = null;    
-    // Listener para mensajes personalizados (simplificado - no usado actualmente)
-    context.addCustomMessageListener(CUSTOM_CHANNEL, (customEvent) => {
-      console.log('📡 Mensaje recibido:', customEvent.data);
-    });
-    
     // Listener para cuando se carga media (PRINCIPAL - lee customData)
     playerManager.addEventListener(
       cast.framework.events.EventType.LOAD,
       (event) => {
         console.log('📺 LOAD Event:', event);
-        const loadRequestData = event.loadRequestData;
-        if (loadRequestData && loadRequestData.media) {
-          const media = loadRequestData.media;
-          const customData = media.customData;
-          
-          console.log('📦 Custom Data:', customData);
-          
-          if (customData && customData.type === 'CARD_WITH_AUDIO') {
-            displayCard(customData.card);
-          } else if (media.metadata) {
-            // Fallback si no hay customData
-            const card = {
-              imageUrl: media.contentUrl,
-              name: media.metadata.title || 'Sin nombre',
-              description: media.metadata.subtitle || '',
-              id: null
-            };
-            displayCard(card);
+        try {
+          const loadRequestData = event.loadRequestData;
+          if (loadRequestData && loadRequestData.media) {
+            const media = loadRequestData.media;
+            const customData = media.customData;
+            
+            console.log('📦 Custom Data:', customData);
+            
+            if (customData && customData.type === 'CARD_WITH_AUDIO') {
+              displayCard(customData.card);
+            } else if (media.metadata) {
+              // Fallback si no hay customData
+              const card = {
+                imageUrl: media.contentUrl,
+                name: media.metadata.title || 'Sin nombre',
+                description: media.metadata.subtitle || '',
+                id: null
+              };
+              displayCard(card);
+            }
           }
+        } catch (error) {
+          console.error('❌ Error en LOAD event:', error);
         }
       }
     );
