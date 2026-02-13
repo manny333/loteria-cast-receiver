@@ -393,16 +393,13 @@
               }, 100);
               return null; // No cargar la imagen
             } else if (customData && customData.type === 'CARD_WITH_AUDIO') {
-              // Mostrar carta y actualizar metadata
+              // Mostrar carta en el TV sin actualizar expanded controller
               console.log('🃏 Carta recibida:', customData.card.name);
               setTimeout(() => {
                 displayCard(customData.card);
               }, 100);
-              // Modificar loadRequestData para evitar reload visual
-              loadRequestData.autoplay = false;
-              loadRequestData.currentTime = 0;
-              // Devolver loadRequestData para que el expanded controller muestre la info
-              return loadRequestData;
+              // Devolver null para no actualizar el expanded controller (evita flashazo)
+              return null;
             }
           }
         } catch (error) {
